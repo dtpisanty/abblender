@@ -1,15 +1,17 @@
 import bpy
 from math import degrees
 
+#Golobal parameters
 frameStart=bpy.context.scene.frame_start
 frameEnd=bpy.context.scene.frame_end
-armature=bpy.data.objects['Armature']
+armatureName=bpy.context.object.name
+armature=bpy.data.objects[armatureName]
 tool=bpy.data.objects['Tool']
-jointtargets=[]
 bones=armature.pose.bones[1:]
-speed="v1000"
+speed="v1000" #TODO intregrate to UI
+jointtargets=[]
 command=""
-path="C:\\Users\\D1390\\Dropbox\\investigacion\\robot"
+path=bpy.path.abspath("//") #TODO intregrate to UI
 tab="    "
 def toJointtarget(bones,axis='y'):
     '''
@@ -50,14 +52,14 @@ def save(filename,module_name="Animation"):
     lines.append("\n")
     lines.append(tab+"PERS tooldata noTool := [ TRUE, [ [0, 0, 0], [1, 0, 0 ,0] ], [0.001, [0, 0, 0.001], [1, 0, 0, 0], 0, 0, 0] ];")
     lines.append("\n")
-    lines.append(tab+startpos+"\n")
-    lines.append(tab+endpos+"\n")
+    lines.append(tab+startpos+";\n")
+    lines.append(tab+endpos+";\n")
     lines.append(tab+command+"\n")
     lines.append("\n")
     lines.append("PROC animate()\n")
     lines.append(tab+"MoveAbsJ startpos, "+speed+", fine, noTool;"+"\n")
-    lines.append(tab+"FOR i FROM 1 TO dim(jointtarget,1) DO\n")
-    lines.append(tab+tab+"MoveAbsJ jointtarget{i}, "+speed+", z15, noTool;\n")
+    lines.append(tab+"FOR i FROM 1 TO dim(positions,1) DO\n")
+    lines.append(tab+tab+"MoveAbsJ positions{i}, "+speed+", z15, noTool;\n")
     lines.append(tab+"ENDFOR\n")
     lines.append(tab+"MoveAbsJ endpos, "+speed+", fine, noTool;\n")
     lines.append("ENDPROC\n")
@@ -92,5 +94,4 @@ command+=tab+tab+jointtargets[-1]+"\n"+tab+"];"
 #print(startpos)
 #print(endpos)
 save("animation.mod")
-print("Saves as animation.mod")
-
+print("Saved as "+path+"animation.mod")
