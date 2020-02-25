@@ -9,11 +9,14 @@ armature=bpy.data.objects[armatureName]
 tool=bpy.data.objects['Tool']
 bones=armature.pose.bones[1:]
 speed="v1000" #TODO intregrate to UI
+reportFrame=True #TODO intregrate to UI
+host = "127.0.0.1"
+port=10000
 jointtargets=[]
 command=""
 path=bpy.path.abspath("//") #TODO intregrate to UI
 tab="    "
-step=1
+step=5
 
 def toJointtarget(bones,axis='y'):
     '''
@@ -68,18 +71,32 @@ def save(module_name="Animation"):
     lines=[]
     lines.append("Module "+module_name+"\n")
     lines.append("\n")
-    lines.append(tab+"PERS tooldata noTool := [ TRUE, [ [0, 0, 0], [1, 0, 0 ,0] ], [0.001, [0, 0, 0.001], [1, 0, 0, 0], 0, 0, 0] ];")
+    if reportFrame:
+        lines.append(tab+"VAR SocketDev socket0;\n")
+        lines.append(tab+"CONST string stride:=\""+str(step)+"\";\n")
+    lines.append(tab+"PERS tooldata noTool := [ TRUE, [ [0, 0, 0], [1, 0,   0 ,0] ], [0.001, [0, 0, 0.001], [1, 0, 0, 0], 0, 0, 0] ];")
     lines.append("\n")
     lines.append(tab+startpos+";\n")
     lines.append(tab+endpos+";\n")
     lines.append(tab+command+"\n")
     lines.append("\n")
     lines.append("PROC animate()\n")
+    if reportFrame:
+        lines.append(tab+"SocketCreate socket0;")
+        lines.append(tab+"SocketConnect socket0, \""+host+"\","+str(port)+";")
     lines.append(tab+"MoveAbsJ startpos, "+speed+", fine, noTool;"+"\n")
-    lines.append(tab+"FOR i FROM 1 TO dim(positions,1) DO\n")
+    if reportFrame:
+        lines.append(tab+tab+"SocketSend socket0 \Str:=\"0\";\n")
+    lines.append(tab+"FOR i FROM 1 TO dim(positions,1)-1 DO\n")
     lines.append(tab+tab+"MoveAbsJ positions{i}, "+speed+time+", z15, noTool;\n")
+    if reportFrame:
+        lines.append(tab+tab+"SocketSend socket0 \Str:=stride;\n")
     lines.append(tab+"ENDFOR\n")
     lines.append(tab+"MoveAbsJ endpos, "+speed+", fine, noTool;\n")
+    if reportFrame:
+        lines.append(tab+"SocketSend socket0 \Str:=stride;\n")
+    if reportFrame:
+        lines.append(tab+"SocketClose socket0;\n")
     lines.append("ENDPROC\n")
     lines.append("\n")
     lines.append("PROC main()\n")
