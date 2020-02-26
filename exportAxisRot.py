@@ -36,10 +36,7 @@ def toJointtarget(bones,axis='y'):
                 out+="{:.2f}], [ 9E9, 9E9, 9E9, 9E9, 9E9, 9E9] ]".format(degrees(bone.matrix_basis.to_euler().x))
         elif(axis=="y"):
             if(bone.name!="Axis6"):
-                if(bone.name!="Axis2"):
-                    out+="{:.2f},".format(degrees(bone.matrix_basis.to_euler().y)*-1)
-                else:
-                    out+="{:.2f},".format(degrees(bone.matrix_basis.to_euler().y))
+                out+="{:.2f},".format(degrees(bone.matrix_basis.to_euler().y))
             else:
                 out+="{:.2f}], [ 9E9, 9E9, 9E9, 9E9, 9E9, 9E9] ]".format(degrees(bone.matrix_basis.to_euler().y))
         elif(axis=="z"):
@@ -73,7 +70,7 @@ def save(module_name="Animation"):
     lines.append("\n")
     if reportFrame:
         lines.append(tab+"VAR SocketDev socket0;\n")
-        lines.append(tab+"CONST string stride:=\""+str(step)+"\";\n")
+        lines.append(tab+"CONST num stride:="+str(step)+";\n")
     lines.append(tab+"PERS tooldata noTool := [ TRUE, [ [0, 0, 0], [1, 0,   0 ,0] ], [0.001, [0, 0, 0.001], [1, 0, 0, 0], 0, 0, 0] ];")
     lines.append("\n")
     lines.append(tab+startpos+";\n")
@@ -90,11 +87,11 @@ def save(module_name="Animation"):
     lines.append(tab+"FOR i FROM 1 TO dim(positions,1)-1 DO\n")
     lines.append(tab+tab+"MoveAbsJ positions{i}, "+speed+time+", z15, noTool;\n")
     if reportFrame:
-        lines.append(tab+tab+"SocketSend socket0 \Str:=stride;\n")
+        lines.append(tab+tab+"SocketSend socket0 \Str:= NumToStr(stride*i,0);\n")
     lines.append(tab+"ENDFOR\n")
     lines.append(tab+"MoveAbsJ endpos, "+speed+", fine, noTool;\n")
     if reportFrame:
-        lines.append(tab+"SocketSend socket0 \Str:=stride;\n")
+        lines.append(tab+"SocketSend socket0 \Str:=\""+str(frameEnd)+"\";\n")
     if reportFrame:
         lines.append(tab+"SocketClose socket0;\n")
     lines.append("ENDPROC\n")
