@@ -9,7 +9,7 @@ armature=bpy.data.objects[armatureName]
 tool=bpy.data.objects['Tool']
 bones=armature.pose.bones[1:]
 speed="v1000" #TODO intregrate to UI
-reportFrame=True #TODO intregrate to UI
+reportFrame=False #TODO intregrate to UI
 host = "127.0.0.1"
 port=10000
 jointtargets=[]
@@ -30,17 +30,23 @@ def toJointtarget(bones,axis='y'):
     out="[["
     for bone in bones:
         if(axis=="x"):
-            if(bone.name!="Axis6"):
+            if (bone.name=="Axis6_IK"):
+                pass
+            elif(bone.name!="Axis6"):
                 out+="{:.2f},".format(degrees(bone.matrix_basis.to_euler().x))
-            else:
+            else :
                 out+="{:.2f}], [ 9E9, 9E9, 9E9, 9E9, 9E9, 9E9] ]".format(degrees(bone.matrix_basis.to_euler().x))
         elif(axis=="y"):
-            if(bone.name!="Axis6"):
+            if (bone.name=="Axis6_IK"):
+                pass
+            elif(bone.name!="Axis6"):
                 out+="{:.2f},".format(degrees(bone.matrix_basis.to_euler().y))
             else:
                 out+="{:.2f}], [ 9E9, 9E9, 9E9, 9E9, 9E9, 9E9] ]".format(degrees(bone.matrix_basis.to_euler().y))
         elif(axis=="z"):
-            if(bone.name!="Axis6"):
+            if (bone.name=="Axis6_IK"):
+                pass
+            elif(bone.name!="Axis6"):
                 out+="{:.2f},".format(degrees(bone.matrix_basis.to_euler().z))
             else:
                 out+="{:.2f}], [ 9E9, 9E9, 9E9, 9E9, 9E9, 9E9] ]".format(degrees(bone.matrix_basis.to_euler().z))
