@@ -8,23 +8,25 @@ bl_info={
     "wiki_url":"https://github.com/dtpisanty/abblender"    
 }
 
+
 import bpy
 from math import degrees
 #-----------------------------
 #SCENE PROPERTIES
 #-----------------------------
 class AbblenderProperties(bpy.types.PropertyGroup):
+    path:bpy.props.StringProperty(name="Export path",description="Path to save MOD file",default="//")
+    module_name:bpy.props.StringProperty(name="Filename",description="Output file will be filename.MOD",default="animation")
     speed:bpy.props.IntProperty(name="Speed",default=1000,min=10,max=7000)
     step:bpy.props.IntProperty(name="Step",description="A new position is exported every step frames",default=10,min=1)
+    IK:bpy.props.BoolProperty(name="Inverse Kinematic",description="Bake IK before exporting")
     reportFrame:bpy.props.BoolProperty(name="Report Frame",description="Send current step over TCP")
     host:bpy.props.StringProperty(name="Host",description="IP to report step",default="127.0.0.1")
     port:bpy.props.IntProperty(name="Port",description="Receiving TCP port number",default=10000,min=0,max=65535)
-    path:bpy.props.StringProperty(name="Export path",description="Path to save MOD file",default="//")
-    module_name:bpy.props.StringProperty(name="Filename",description="Output file will be filename.MOD",default="animation")
 
 class ExportJointTarget(bpy.types.Operator):
-    '''An operator class to export ABB rapid .mod files
-    describing robot movement through an array of jointtargets
+    '''
+    Export ABB RAPID .mod file describing robot movement as jointtargets
     '''
     bl_idname="abblender.joint_target"
     bl_label="Export Joint Targets"
@@ -39,6 +41,7 @@ class ExportJointTarget(bpy.types.Operator):
     endpos="";
     defTargets=""
     tab="    "
+    hasIKmod=False
     def toJointtarget(self,bones,axis='y'):
         '''
         Converts bones rotation to Rapid jointtarget array
@@ -77,8 +80,8 @@ class ExportJointTarget(bpy.types.Operator):
 
     def save(self,context,moduleName="Animation"):
         '''
-        Compiles the Rapid code and converts saves it to
-        <module_name>.mod
+        Compiles the Rapid code and saves it to
+        <moduleName>.mod
         Takes:
             moduleName -> String
         Returns:
@@ -90,7 +93,6 @@ class ExportJointTarget(bpy.types.Operator):
             seconds=(frames)/self.fps
             duration=abbr_props.step*(seconds/frames)
             time="\\T:={:.3f}".format(duration)
-            print(time)
         lines=[]
         lines.append("Module "+moduleName+"\n")
         lines.append("\n")
@@ -117,7 +119,7 @@ class ExportJointTarget(bpy.types.Operator):
         lines.append(self.tab+"ENDFOR\n")
         lines.append(self.tab+"MoveAbsJ endpos, "+"v{0} ".format(abbr_props.speed)+", fine, noTool;\n")
         if abbr_props.reportFrame:
-            lines.append(self.tab+"SocketSend socket0 \Str:=\""+str(frameEnd)+"\";\n")
+            lines.append(self.tab+"SocketSend socket0 \Str:=\""+str(self.frameEnd)+"\";\n")
         if abbr_props.reportFrame:
             lines.append(self.tab+"SocketClose socket0;\n")
         lines.append("ENDPROC\n")
@@ -140,6 +142,12 @@ class ExportJointTarget(bpy.types.Operator):
         armatureName=context.active_object.name
         armature=bpy.data.objects[armatureName]
         bones=armature.pose.bones[1:]
+        if abbr_props.IK:
+            bpy.ops.object.posemode_toggle()
+            bpy.ops.pose.select_all(action='SELECT')
+            bpy.ops.nla.bake(frame_start=1, frame_end=250, visual_keying=True, clear_constraints=True, clear_parents=False, bake_types={'POSE'})
+            bpy.ops.pose.select_all(action='DESELECT')
+            bpy.ops.object.posemode_toggle()
         scene.frame_set(self.frameStart)
         self.startpos="CONST jointtarget startpos := "+self.toJointtarget(bones)
         scene.frame_set(self.frameEnd)
@@ -156,17 +164,36 @@ class ExportJointTarget(bpy.types.Operator):
         return{'FINISHED'}
 
 class abblenderPanel(bpy.types.Panel):
+    
     bl_idname="OBJECT_PT_abblender"
     bl_label="ABBlender"
-    bl_space_type="PROPERTIES"
-    bl_region_type="WINDOW"
-    bl_context="object"
+    bl_space_type="VIEW_3D"
+    bl_region_type="UI"
+    bl_context="objectmode"
+    bl_category="ABBlender"
 
     def draw(self,context):
-        self.layout.label(text="ABBlender")
+        layout=self.layout
+        abbr_props=context.scene.abbrProps
+        layout.label(text="Export Properties")
+        layout.prop(abbr_props,"path")
+        layout.prop(abbr_props,"module_name")
+        layout.prop(abbr_props,"step")
+        layout.prop(abbr_props,"speed")
+        layout.prop(abbr_props,"IK")
+        layout.prop(abbr_props,"reportFrame")
+        layout.prop(abbr_props,"host")
+        layout.prop(abbr_props,"port")
+        layout.separator()
+        layout.operator("abblender.joint_target")
+
+#------------------------------------------------
+#Class Registration
+#------------------------------------------------
 classes=(
     AbblenderProperties,
-    ExportJointTarget
+    ExportJointTarget,
+    abblenderPanel
     )
 def register():
     for cls in classes:
