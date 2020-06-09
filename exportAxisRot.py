@@ -8,13 +8,13 @@ armatureName=bpy.context.object.name
 armature=bpy.data.objects[armatureName]
 tool=bpy.data.objects['Tool']
 bones=armature.pose.bones[1:]
-speed="v1000" #TODO intregrate to UI
-reportFrame=False #TODO intregrate to UI
+speed="v1000" #TODO intregrate to UI as IntegerProperty
+reportFrame=False #TODO intregrate to UI as BoolProperty
 host = "127.0.0.1"
 port=10000
 jointtargets=[]
 command=""
-path=bpy.path.abspath("//") #TODO intregrate to UI
+path=bpy.path.abspath("//") #TODO intregrate to UI as StringProperty
 tab="    "
 step=5
 
