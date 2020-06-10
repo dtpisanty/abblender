@@ -88,6 +88,7 @@ class ExportJointTarget(bpy.types.Operator):
             None
         '''
         abbr_props=context.scene.abbrProps
+        time="\\T:={:.3f}".format(0)
         if abbr_props.step>1:
             frames=self.frameEnd-self.frameStart
             seconds=(frames)/self.fps
