@@ -23,6 +23,7 @@ The ABBlender panel control the settings used to export a RAPID .mod file that c
 * Filename: The filename to use for exporting. This will also be the name of the module contained in the file so avoid RAPID command names.
 * Step: The number of steps to skip before writting the next position. 1 will export all postions but will likely result in a "Too many close positions" error.
 * Speed: The Tool Center Point speed in mm/seconds (This converts to vSpeed in RAPID code).
+* Inverse Kinematiks: When checked bakes current IK before exporting.
 * Report Frame: When the checkbox is enabled the program will send its current frame as a TCP/IP after every movement.
   * Host: IP address to report to
   * Port: Receiving port
