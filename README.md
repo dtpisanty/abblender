@@ -1,24 +1,24 @@
 # abblender
-ABBlender is a plugin for Blender 3D that allows animation of robots within blander to be exported as RAPID modules (.mod files)
-It has only been tested on 6-axis IRB-1600x145 robots.
+ABBlender is a plugin for Blender 3D that allows animation of robots within Blender to be exported as RAPID modules (.mod files)
+It has only been tested on 6-axis IRB-1600/10Kg/145 robots.
 
 ## Current Features
  
 * Export rig positions as jointtarget
 * Works with both forward-kinematic and reverse-kinematic rigs
-* Report current frame through TCP messages for sync using native RAPID sockets (PC Interface must be enabled)
+* Report current frame through TCP/IP messages for sync using native RAPID sockets (PC Interface must be enabled)
 * No tool support, current tool centre point is Axis 6.
 
 ## Usage
 
-Install like any add-on using the Blender Add-On installer (Preferences -> Add-ons). This will create a new tab on the sidebar (the one with, view and tools) while in Object Mode, ABBlender is not available in any other mode.
+Install like any add-on using the Blender Add-On installer (Preferences -> Add-ons). This will create a new tab on the sidebar (the one with view and tools) while in Object Mode, ABBlender is not available in any other mode.
 
 ### Bone naming
-ABBlender works on rigged models of six axis robots. It's importat that the bones controlling each axis be named Axis1, Axis2, Axis3, Axis4, Axis5 and Axis6. In most situations you probably want a root bone as well. For inverse kinematics a the control bone should be named IKcontrol.
+ABBlender works on rigged models of six axis robots. It's importat that the bones controlling each axis be named Axis1, Axis2, Axis3, Axis4, Axis5 and Axis6. In most situations you probably want a root bone as well. For inverse kinematics the control bone should be named IKcontrol.
 (See example files robotControl.blend and robotControlIK.blend for details).
 
 ### Options
-The ABBlender panel control the settings used to export a RAPID .mod file that can be used in RobotStudio. The options are the following:
+The ABBlender panel contains the settings used to export a RAPID .mod file that can be used in RobotStudio. The options are the following:
 * Export Path: Directory in which the resulting file will be saved (default is the .blend files directory)
 * Filename: The filename to use for exporting. This will also be the name of the module contained in the file so avoid RAPID command names.
 * Step: The number of steps to skip before writting the next position. 1 will export all postions but will likely result in a "Too many close positions" error.
