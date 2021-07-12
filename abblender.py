@@ -17,7 +17,7 @@ from math import degrees
 class AbblenderProperties(bpy.types.PropertyGroup):
     path:bpy.props.StringProperty(name="Export path",description="Path to save MOD file",default="//")
     module_name:bpy.props.StringProperty(name="Filename",description="Output file will be filename.MOD",default="animation")
-    speed:bpy.props.IntProperty(name="Speed",default=1000,min=10,max=7000)
+    speed:bpy.props.IntProperty(name="Speed",default=1000,min=10,max=7000,description="Tool Center point speed mm/s")
     step:bpy.props.IntProperty(name="Step",description="A new position is exported every step frames",default=10,min=1)
     IK:bpy.props.BoolProperty(name="Inverse Kinematic",description="Bake IK before exporting")
     reportFrame:bpy.props.BoolProperty(name="Report Frame",description="Send current step over TCP")
