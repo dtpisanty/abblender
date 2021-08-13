@@ -41,3 +41,6 @@ Once the file has been generated it's simply a matter of adding it to your contr
 
 ## Contact
 Address any questions to dtrujillop@centro.edu.mx
+
+## Credits
+ABBlender is currently developed by Diego Trujillo-Pisanty at STEAM Lab within Centro de Diseño, Cine y Televisión in Mexico City
