@@ -33,7 +33,7 @@ class ExportJointTarget(bpy.types.Operator):
     bl_options={"REGISTER","UNDO"}
     
     #Fields
-    jointtargets=[]
+    
     fps=24
     frameStart=1
     frameEnd=255
@@ -134,6 +134,7 @@ class ExportJointTarget(bpy.types.Operator):
             file.writelines(lines)
 
     def execute(self,context):
+        jointtargets=[]
         abbr_props=context.scene.abbrProps
         if(abbr_props.path=="//"):
             abbr_props.path=bpy.path.abspath("//")
@@ -156,12 +157,13 @@ class ExportJointTarget(bpy.types.Operator):
         for f in range(self.frameStart,self.frameEnd,abbr_props.step):
             scene.frame_set(f)
             jointtarget=self.toJointtarget(bones)
-            self.jointtargets.append(jointtarget)
-        self.defTargets="CONST jointtarget positions {"+str(len(self.jointtargets))+"}:= [\n"
-        for j in range(0,len(self.jointtargets)-1):
-            self.defTargets+=self.tab+self.tab+self.jointtargets[j]+",\n"
-        self.defTargets+=self.tab+self.tab+self.jointtargets[-1]+"\n"+self.tab+"];"
+            jointtargets.append(jointtarget)
+        self.defTargets="CONST jointtarget positions {"+str(len(jointtargets))+"}:= [\n"
+        for j in range(0,len(jointtargets)-1):
+            self.defTargets+=self.tab+self.tab+jointtargets[j]+",\n"
+        self.defTargets+=self.tab+self.tab+jointtargets[-1]+"\n"+self.tab+"];"
         self.save(context,abbr_props.module_name)
+        #print(len(jointtargets))
         return{'FINISHED'}
 
 class abblenderPanel(bpy.types.Panel):
