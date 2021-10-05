@@ -4,7 +4,7 @@ bl_info={
     "description":"Export RAPID scripts for ABB robots",
     "name":"ABBlender",
     "support":"TESTING",
-    "version":(0,1),
+    "version":(0,2),
     "wiki_url":"https://github.com/dtpisanty/abblender"    
 }
 
@@ -19,6 +19,8 @@ class AbblenderProperties(bpy.types.PropertyGroup):
     module_name:bpy.props.StringProperty(name="Filename",description="Output file will be filename.MOD",default="animation")
     speed:bpy.props.IntProperty(name="Speed",default=1000,min=10,max=7000,description="Tool Center point speed mm/s")
     step:bpy.props.IntProperty(name="Step",description="A new position is exported every step frames",default=10,min=1)
+    outputState:bpy.props.BoolProperty(name="Output state",description="Turns IO output signal on and off")
+    signalName:bpy.props.StringProperty(name="Signal name",description="Name of IO signal used",default="")
     IK:bpy.props.BoolProperty(name="Inverse Kinematic",description="Bake IK before exporting")
     reportFrame:bpy.props.BoolProperty(name="Report Frame",description="Send current step over TCP")
     host:bpy.props.StringProperty(name="Host",description="IP to report step",default="127.0.0.1")
@@ -40,6 +42,8 @@ class ExportJointTarget(bpy.types.Operator):
     startpos="";
     endpos="";
     defTargets=""
+    ioStates=""
+    endState=0
     tab="    "
     hasIKmod=False
     def toJointtarget(self,bones,axis='y'):
@@ -105,6 +109,7 @@ class ExportJointTarget(bpy.types.Operator):
         lines.append(self.tab+self.startpos+";\n")
         lines.append(self.tab+self.endpos+";\n")
         lines.append(self.tab+self.defTargets+"\n")
+        lines.append(self.tab+self.ioStates+"\n")
         lines.append("\n")
         lines.append("PROC move()\n")
         if abbr_props.reportFrame:
@@ -114,11 +119,13 @@ class ExportJointTarget(bpy.types.Operator):
         if abbr_props.reportFrame:
             lines.append(self.tab+self.tab+"SocketSend socket0 \Str:=\"0\";\n")
         lines.append(self.tab+"FOR i FROM 1 TO dim(positions,1)-1 DO\n")
+        lines.append(self.tab+self.tab+"SetDO "+abbr_props.signalName+", ioData{i};\n")
         lines.append(self.tab+self.tab+"MoveAbsJ positions{i}, "+"v{0} ".format(abbr_props.speed)+time+", z15, noTool;\n")
         if abbr_props.reportFrame:
             lines.append(self.tab+self.tab+"SocketSend socket0 \Str:= NumToStr(stride*i,0);\n")
         lines.append(self.tab+"ENDFOR\n")
         lines.append(self.tab+"MoveAbsJ endpos, "+"v{0} ".format(abbr_props.speed)+", fine, noTool;\n")
+        lines.append(self.tab+"SetDO "+abbr_props.signalName+","+str(self.endState)+";\n")
         if abbr_props.reportFrame:
             lines.append(self.tab+"SocketSend socket0 \Str:=\""+str(self.frameEnd)+"\";\n")
         if abbr_props.reportFrame:
@@ -135,6 +142,7 @@ class ExportJointTarget(bpy.types.Operator):
 
     def execute(self,context):
         jointtargets=[]
+        outputStates=[]
         abbr_props=context.scene.abbrProps
         if(abbr_props.path=="//"):
             abbr_props.path=bpy.path.abspath("//")
@@ -154,14 +162,31 @@ class ExportJointTarget(bpy.types.Operator):
         self.startpos="CONST jointtarget startpos := "+self.toJointtarget(bones)
         scene.frame_set(self.frameEnd)
         self.endpos="CONST jointtarget endpos := "+self.toJointtarget(bones)
-        for f in range(self.frameStart,self.frameEnd,abbr_props.step):
+        self.endState=int(abbr_props.outputState)
+        ioState=abbr_props.outputState
+        ioPrev=abbr_props.outputState
+        for f in range(self.frameStart,self.frameEnd+1):
             scene.frame_set(f)
-            jointtarget=self.toJointtarget(bones)
-            jointtargets.append(jointtarget)
+            if(f%abbr_props.step==0):
+                jointtarget=self.toJointtarget(bones)
+                jointtargets.append(jointtarget)
+                outputStates.append(abbr_props.outputState)
+                ioPrev=outputStates[-1]
+            elif(ioPrev !=abbr_props.outputState):
+                jointtarget=self.toJointtarget(bones)
+                jointtargets.append(jointtarget)
+                outputStates.append(abbr_props.outputState)
+                ioPrev=outputStates[-1]
+        #EXPORT POSITIONS
         self.defTargets="CONST jointtarget positions {"+str(len(jointtargets))+"}:= [\n"
         for j in range(0,len(jointtargets)-1):
             self.defTargets+=self.tab+self.tab+jointtargets[j]+",\n"
         self.defTargets+=self.tab+self.tab+jointtargets[-1]+"\n"+self.tab+"];"
+        #EXPORT IO
+        self.ioStates="CONST num ioData {"+str(len(outputStates))+"}:="+"["
+        for j in range(0,len(outputStates)-1):
+            self.ioStates+=str(int(outputStates[j]))+","
+        self.ioStates+=str(int(outputStates[-1]))+"];\n"
         self.save(context,abbr_props.module_name)
         #print(len(jointtargets))
         return{'FINISHED'}
@@ -183,7 +208,12 @@ class abblenderPanel(bpy.types.Panel):
         layout.prop(abbr_props,"module_name")
         layout.prop(abbr_props,"step")
         layout.prop(abbr_props,"speed")
+        layout.label(text="IO Signals")
+        layout.prop(abbr_props,"signalName")
+        layout.prop(abbr_props,"outputState")
+        layout.label(text="Inverse Kinematics")
         layout.prop(abbr_props,"IK")
+        layout.label(text="Communication")
         layout.prop(abbr_props,"reportFrame")
         layout.prop(abbr_props,"host")
         layout.prop(abbr_props,"port")
