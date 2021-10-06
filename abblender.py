@@ -15,11 +15,11 @@ from math import degrees
 #SCENE PROPERTIES
 #-----------------------------
 class AbblenderProperties(bpy.types.PropertyGroup):
-    path:bpy.props.StringProperty(name="Export path",description="Path to save MOD file",default="//")
+    path:bpy.props.StringProperty(name="Export path",description="Path to save MOD file",default="",subtype="DIR_PATH")
     module_name:bpy.props.StringProperty(name="Filename",description="Output file will be filename.MOD",default="animation")
     speed:bpy.props.IntProperty(name="Speed",default=1000,min=10,max=7000,description="Tool Center point speed mm/s")
     step:bpy.props.IntProperty(name="Step",description="A new position is exported every step frames",default=10,min=1)
-    outputState:bpy.props.BoolProperty(name="Output state",description="Turns IO output signal on and off")
+    outputState:bpy.props.BoolProperty(name="Pulse signal",description="Generates 15ms pulse on output signal")
     signalName:bpy.props.StringProperty(name="Signal name",description="Name of IO signal used",default="")
     IK:bpy.props.BoolProperty(name="Inverse Kinematic",description="Bake IK before exporting")
     reportFrame:bpy.props.BoolProperty(name="Report Frame",description="Send current step over TCP")
@@ -119,13 +119,17 @@ class ExportJointTarget(bpy.types.Operator):
         if abbr_props.reportFrame:
             lines.append(self.tab+self.tab+"SocketSend socket0 \Str:=\"0\";\n")
         lines.append(self.tab+"FOR i FROM 1 TO dim(positions,1)-1 DO\n")
-        lines.append(self.tab+self.tab+"SetDO "+abbr_props.signalName+", ioData{i};\n")
+        lines.append(self.tab+self.tab+"IF ioData{i}=1 THEN\n")
+        lines.append(self.tab+self.tab+self.tab+"pulseDO "+abbr_props.signalName+";\n")
+        lines.append(self.tab+self.tab+"ENDIF\n")
+        #lines.append(self.tab+self.tab+"SetDO "+abbr_props.signalName+", ioData{i};\n")
         lines.append(self.tab+self.tab+"MoveAbsJ positions{i}, "+"v{0} ".format(abbr_props.speed)+time+", z15, noTool;\n")
         if abbr_props.reportFrame:
             lines.append(self.tab+self.tab+"SocketSend socket0 \Str:= NumToStr(stride*i,0);\n")
         lines.append(self.tab+"ENDFOR\n")
         lines.append(self.tab+"MoveAbsJ endpos, "+"v{0} ".format(abbr_props.speed)+", fine, noTool;\n")
-        lines.append(self.tab+"SetDO "+abbr_props.signalName+","+str(self.endState)+";\n")
+        if self.endState:
+            lines.append(self.tab+"PulseDO "+abbr_props.signalName+";\n")
         if abbr_props.reportFrame:
             lines.append(self.tab+"SocketSend socket0 \Str:=\""+str(self.frameEnd)+"\";\n")
         if abbr_props.reportFrame:
