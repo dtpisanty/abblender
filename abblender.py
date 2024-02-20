@@ -3,7 +3,7 @@ bl_info={
     "blender":(2,80,0),
     "description":"Export RAPID scripts for ABB robots",
     "name":"ABBlender",
-    "support":"TESTING",
+    "support":"COMMUNITY",
     "version":(0,2),
     "wiki_url":"https://github.com/dtpisanty/abblender"    
 }
